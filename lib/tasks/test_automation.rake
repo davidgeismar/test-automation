@@ -16,11 +16,11 @@ namespace :specs do
     puts(diff)
     puts(diff.count)
     diff.each do |filename|
-       File.open("#{spec_models_path}/#{filename}_spec.rb", "w+"){ |f|
+      File.open("#{spec_models_path}/#{filename}_spec.rb", "w+") do |f|
 
-        TestFileGenerator.new(filename.classify.constantize, f).init_test_creation
+         TestFileGenerator.new(filename.classify.constantize, f).init_test_creation
 
-       }
+      end
        # bundle exec rspec spec/models/product_spec.#!/usr/bin/env ruby -wKU
 
     end

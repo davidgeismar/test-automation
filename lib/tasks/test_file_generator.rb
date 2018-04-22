@@ -1,6 +1,8 @@
 require "pry-byebug"
+require_relative 'test_procs'
 
 class TestFileGenerator
+  include ::TestProcs
   attr_accessor :klass, :file, :generate_fields, :generate_enumerized_attributes, :generate_associations, :generate_validators, :generate_index_specifications
 
   def initialize(klass, file, generate_fields=true, generate_enumerized_attributes=true, generate_associations=true,
@@ -16,34 +18,14 @@ class TestFileGenerator
 
   def init_test_creation
     file.write("RSpec.describe #{klass}, type: :model do \n")
-    fields_proc =  Proc.new do |test_subjects|
-                      test_subjects.each do |key, value|
-                          file.write("\t\tit { is_expected.to have_field(:#{value.name}).of_type(#{value.type}) } \n")
-                      end
-                    end
-    enumerize_proc = Proc.new do |test_subjects|
-                        test_subjects.attributes.each do |key, value|
-                          file.write("\t\tit { is_expected.to enumerize(:#{value.name}).in(#{value.values}).with_i18n_scope(#{value.i18n_scope.first}) } \n")
-                        end
-                      end
-    validation_proc = Proc.new do |test_subjects|
-                        test_subjects.each do |validator|
-                          if validator.instance_of? Mongoid::Validatable::PresenceValidator
-                             file.write("\t\tit { is_expected.to validate_presence_of(:#{validator.attributes.first}) }\n")
-                          end
-                        end
-                      end
 
-    index_proc = Proc.new do |test_subjects|
-                        test_subjects.each do |index|
-                          file.write("\t\tit { is_expected.to have_index_for(#{index.key}).with_options(name: '#{index.options[:name]}') }\n") if index.options[:name]
-                        end
-                      end
 
-    data = [{klass_method: :fields, args: nil, allow_generation: generate_fields, context_name: "fields", write_spec_proc: fields_proc },
-            {klass_method: :enumerized_attributes, args: nil, allow_generation: generate_enumerized_attributes,context_name: "enumerize", write_spec_proc: enumerize_proc},
-            {klass_method: :validators, args: nil, allow_generation: generate_validators, context_name: "validations",  write_spec_proc: validation_proc },
-            {klass_method: :index_specifications, args: nil, allow_generation: generate_index_specifications, context_name: "index", write_spec_proc: index_proc }
+    data = [{klass_method: :fields, klass_method_args: nil, allow_generation: generate_fields, context_name: "fields", write_spec_proc: field_proc },
+            {klass_method: :enumerized_attributes, klass_method_args: nil, allow_generation: generate_enumerized_attributes,context_name: "enumerize", write_spec_proc: enumerize_proc},
+            {klass_method: :validators, klass_method_args: nil, allow_generation: generate_validators, context_name: "validations",  write_spec_proc: validation_proc },
+            {klass_method: :index_specifications, klass_method_args: nil, allow_generation: generate_index_specifications, context_name: "index", write_spec_proc: index_proc },
+            {klass_method: :reflect_on_all_associations, klass_method_args: [:belongs_to, :has_many, :has_and_belongs_to_many], allow_generation: generate_associations, context_name: "associations", write_spec_proc: association_proc }
+
             ]
 
     data.each do |argv|
@@ -51,7 +33,7 @@ class TestFileGenerator
     end
 
 
-    association_specs_generator
+    # association_specs_generator
 
 
 
@@ -82,10 +64,14 @@ class TestFileGenerator
     end
   end
 
-  def generate_specs(klass_method: klass_method, args: args, allow_generation: allow_generation, context_name: context_name, write_spec_proc: write_spec_proc )
-    if klass.send(klass_method).present? && allow_generation
+  def generate_specs(klass_method: klass_method, klass_method_args: klass_method_args, allow_generation: allow_generation, context_name: context_name, write_spec_proc: write_spec_proc )
+    if klass.send(klass_method, *klass_method_args).present? && allow_generation
       file.write("\tcontext '#{context_name}' do \n")
-      write_spec_proc.call klass.send(klass_method)
+      if klass_method_args.present?
+        write_spec_proc.call klass, klass_method, klass_method_args
+      else
+        write_spec_proc.call klass.send(klass_method)
+      end
       file.write("\tend \n")
     end
   end
