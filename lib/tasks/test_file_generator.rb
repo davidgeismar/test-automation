@@ -2,7 +2,7 @@ require "pry-byebug"
 require_relative 'test_procs'
 
 class TestFileGenerator
-  include ::TestProcs
+  include TestProcs
   attr_accessor :klass, :file, :generate_fields, :generate_enumerized_attributes, :generate_associations, :generate_validators, :generate_index_specifications
 
   def initialize(klass, file, generate_fields=true, generate_enumerized_attributes=true, generate_associations=true,
@@ -20,17 +20,17 @@ class TestFileGenerator
     file.write("RSpec.describe #{klass}, type: :model do \n")
 
 
-    data = [{klass_method: :fields, klass_method_args: nil, allow_generation: generate_fields, context_name: "fields", write_spec_proc: field_proc },
-            {klass_method: :enumerized_attributes, klass_method_args: nil, allow_generation: generate_enumerized_attributes,context_name: "enumerize", write_spec_proc: enumerize_proc},
-            {klass_method: :validators, klass_method_args: nil, allow_generation: generate_validators, context_name: "validations",  write_spec_proc: validation_proc },
-            {klass_method: :index_specifications, klass_method_args: nil, allow_generation: generate_index_specifications, context_name: "index", write_spec_proc: index_proc },
-            {klass_method: :reflect_on_all_associations, klass_method_args: [:belongs_to, :has_many, :has_and_belongs_to_many], allow_generation: generate_associations, context_name: "associations", write_spec_proc: association_proc }
+      data = [{klass_method: :fields, klass_method_args: nil, allow_generation: generate_fields, context_name: "fields", write_spec_proc: field_proc },
+              {klass_method: :enumerized_attributes, klass_method_args: nil, allow_generation: generate_enumerized_attributes,context_name: "enumerize", write_spec_proc: enumerize_proc},
+              {klass_method: :validators, klass_method_args: nil, allow_generation: generate_validators, context_name: "validations",  write_spec_proc: validation_proc },
+              {klass_method: :index_specifications, klass_method_args: nil, allow_generation: generate_index_specifications, context_name: "index", write_spec_proc: index_proc },
+              {klass_method: :reflect_on_all_associations, klass_method_args: [:belongs_to, :has_many, :has_and_belongs_to_many], allow_generation: generate_associations, context_name: "associations", write_spec_proc: association_proc }
 
-            ]
+              ]
 
-    data.each do |argv|
-      generate_specs(argv)
-    end
+      data.each do |argv|
+        generate_specs(argv)
+      end
 
 
     # association_specs_generator
