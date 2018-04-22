@@ -18,8 +18,6 @@ class TestFileGenerator
 
   def init_test_creation
     file.write("RSpec.describe #{klass}, type: :model do \n")
-
-
       data = [{klass_method: :fields, klass_method_args: nil, allow_generation: generate_fields, context_name: "fields", write_spec_proc: field_proc },
               {klass_method: :enumerized_attributes, klass_method_args: nil, allow_generation: generate_enumerized_attributes,context_name: "enumerize", write_spec_proc: enumerize_proc},
               {klass_method: :validators, klass_method_args: nil, allow_generation: generate_validators, context_name: "validations",  write_spec_proc: validation_proc },
@@ -32,37 +30,11 @@ class TestFileGenerator
         generate_specs(argv)
       end
 
-
-    # association_specs_generator
-
-
-
-      # validation_specs_generator
-
-      # index_specification_specs_generator
-
     file.write("end \n")
 
   end
 
   private
-
-
-  def association_specs_generator
-    if klass.reflect_on_all_associations(:belongs_to, :has_many, :has_and_belongs_to_many).present? && generate_associations
-       file.write("\tcontext 'associations' do \n")
-         klass.reflect_on_all_associations(:belongs_to).each do |relation|
-           file.write("\t\tit { is_expected.to belong_to(:#{relation.name}).of_type(#{relation.name.to_s.classify.constantize}) } \n")
-         end
-         klass.reflect_on_all_associations(:has_many).each do |relation|
-           file.write("\t\tit { is_expected.to have_many(:#{relation.name}).of_type(#{relation.name.to_s[0..-2].classify.constantize}) } \n")
-         end
-         klass.reflect_on_all_associations(:has_and_belongs_to_many).each do |relation|
-           file.write("\t\tit { is_expected.to have_and_belong_to_many(:#{relation.name}).of_type(#{relation.name.to_s[0..-2].classify.constantize}) } \n")
-         end
-      file.write("\tend \n")
-    end
-  end
 
   def generate_specs(klass_method: klass_method, klass_method_args: klass_method_args, allow_generation: allow_generation, context_name: context_name, write_spec_proc: write_spec_proc )
     if klass.send(klass_method, *klass_method_args).present? && allow_generation
