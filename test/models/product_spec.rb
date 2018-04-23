@@ -1,4 +1,4 @@
-RSpec.describe Product, type: :model do 
+	context 'MONGOID' do 
 	context 'fields' do 
 		it { is_expected.to have_field(:_id).of_type(BSON::ObjectId) } 
 		it { is_expected.to have_field(:created_at).of_type(Time) } 
@@ -37,29 +37,9 @@ RSpec.describe Product, type: :model do
 		it { is_expected.to have_field(:image_file_size).of_type(Integer) } 
 		it { is_expected.to have_field(:image_updated_at).of_type(DateTime) } 
 		it { is_expected.to have_field(:image_fingerprint).of_type(String) } 
-	end 
-	context 'enumerize' do 
 		it { is_expected.to enumerize(:type).in(["application", "digital_book", "website"]).with_i18n_scope(models.product.enum.type) } 
 		it { is_expected.to enumerize(:language).in(["arab", "chinese", "deutsch", "english", "french", "italian", "spanish"]).with_i18n_scope(models.product.enum.language) } 
 		it { is_expected.to enumerize(:resource_type).in(["textbook", "extracurricular", "multimedia", "educational_support"]).with_i18n_scope(models.product.enum.resource_type) } 
-	end 
-	context 'validations' do 
-		it { is_expected.to validate_presence_of(:editor) }
-		it { is_expected.to validate_presence_of(:editor) }
-		it { is_expected.to validate_presence_of(:editor_collection) }
-		it { is_expected.to validate_presence_of(:school_levels) }
-		it { is_expected.to validate_presence_of(:grades) }
-		it { is_expected.to validate_presence_of(:subjects) }
-		it { is_expected.to validate_presence_of(:type) }
-		it { is_expected.to validate_presence_of(:title) }
-		it { is_expected.to validate_presence_of(:resource_type) }
-		it { is_expected.to validate_presence_of(:release_date) }
-		it { is_expected.to validate_presence_of(:reference) }
-	end 
-	context 'index' do 
-		it { is_expected.to have_index_for({:isbn=>1}).with_options(name: 'isbn__index') }
-		it { is_expected.to have_index_for({:title=>1}).with_options(name: 'title__index') }
-		it { is_expected.to have_index_for({:editor__name=>1}).with_options(name: 'editor__name__index') }
 	end 
 	context 'associations' do 
 		it { is_expected.to belong_to(:editor).of_type(Editor) } 
@@ -67,4 +47,13 @@ RSpec.describe Product, type: :model do
 		it { is_expected.to have_many(:articles).of_type(Article) } 
 		it { is_expected.to have_and_belong_to_many(:school_levels).of_type(SchoolLevel) } 
 	end 
-end 
+	context 'validations' do 
+		it { is_expected.to validate_presence_of(:editor) }
+		it { is_expected.to validate_presence_of(:editor_collection) }
+	end 
+	context 'indices' do 
+		it { is_expected.to have_index_for({:isbn=>1}).with_options(name: 'isbn__index') }
+		it { is_expected.to have_index_for({:title=>1}).with_options(name: 'title__index') }
+		it { is_expected.to have_index_for({:editor__name=>1}).with_options(name: 'editor__name__index') }
+	end 
+	end 

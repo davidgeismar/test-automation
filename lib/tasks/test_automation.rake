@@ -2,7 +2,7 @@ require_relative "test_file_generator"
 require_relative "folder_explorer"
 include FolderExplorer
 namespace :specs do
-  desc 'check specs to writte'
+  desc 'check specs to write'
   task to_write: :environment do
     spec_folder = YAML.load_file(Rails.root.join('lib', 'tasks', 'config.yml'))["spec_folder"]
     spec_models_path = Rails.root.join(spec_folder, 'models')

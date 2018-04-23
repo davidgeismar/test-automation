@@ -97,15 +97,15 @@ class Product
 
 
   # Validations
-  validates :school_levels, presence: true
-  validates :grades, presence: true
-  validates :subjects, presence: true
-  validates :type, presence: true
-  validates :title, presence: true
-  validates :resource_type, presence: true
-  validates :release_date, presence: true
-  validates :editor, presence: true
-  validates :reference, presence: true, unless: :product_is_textboook?
+  # validates :school_levels, presence: true
+  # validates :grades, presence: true
+  # validates :subjects, presence: true
+  # validates :type, presence: true
+  # validates :title, presence: true
+  # validates :resource_type, presence: true
+  # validates :release_date, presence: true
+  # validates :editor, presence: true
+  # validates :reference, presence: true, unless: :product_is_textboook?
 
   validates_attachment :image, content_type: { content_type: /\Aimage\/.*\Z/ }
 
