@@ -1,3 +1,5 @@
+require_relative "../../lib/edulib/datatable.rb"
+
 class Product
   include Mongoid::Document
   include Mongoid::Paperclip
@@ -5,7 +7,7 @@ class Product
   include Mongoid::Slug
   include Mongoid::Timestamps
   # include Mongoid::Autoinc
-  # include Edulib::Datatable
+  include ::Edulib::Datatable
   # include Elasticsearch::Model
   # include Elasticsearch::Model::Callbacks
   # include Elasticsearch::DSL
@@ -23,7 +25,6 @@ class Product
   # has_and_belongs_to_many :subjects, order: :name.asc
 
 
-
   # Characteristics
   field :isbn, type: Integer
   field :secondary_isbn, type: Integer
@@ -34,7 +35,7 @@ class Product
   # increments :reference_number
 
 
-  field :description, type: String
+    field :description, type: String
   field :use_terms, type: String
   enumerize :type,
             in: [:application, :digital_book, :website],

@@ -4,31 +4,27 @@ require_relative "enumerize_specs.rb"
 
 class SpecsGenerator
   include MongoidSpecs
-  attr_accessor :klass, :klass_methods, :args, :file, :spec_kind
-
-  def initialize(klass, klass_methods = [], args=[], file, spec_kind)
+  attr_accessor :klass, :file, :instances, :spec_kind, :indent
+  #binding
+  def initialize(klass, file, instances=nil, spec_kind, indent)
     self.klass = klass
     self.file = file
-    self.klass_methods = klass_methods
-    self.args = args
     self.spec_kind = spec_kind
+    self.instances = instances
+    self.indent = indent
   end
 
 
 
   # private
+  #  too complicated need refacto
   def generate
-
-    instances = klass_methods.inject(klass) do |result, sub_arr|
-      if sub_arr[0].present? && sub_arr[1].present?
-        result.try(sub_arr[0], *sub_arr[1])
-      elsif sub_arr[0]
-        result.try(sub_arr[0])
+    if instances
+      instances.each do |instance|
+        spec_kind.new(klass, file, indent, instance).generate
       end
-    end
-    instances.each do |instance|
-      spec_kind.new(klass, file, instance).generate
+    else
+      spec_kind.new(klass, file, indent).generate
     end
   end
-
 end

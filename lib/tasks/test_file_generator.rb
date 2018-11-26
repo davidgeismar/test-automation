@@ -2,10 +2,20 @@ require 'pry-byebug'
 require_relative 'test_procs'
 require_relative 'specs_generator'
 require_relative 'context_block_generator'
+require_relative 'image_spec_block_generator'
+require_relative 'instance_method_spec'
+require_relative 'datatable_spec'
 
 class TestFileGenerator
+
   include TestProcs
-  attr_accessor :klass, :file, :generate_fields, :generate_enumerized_attributes, :generate_associations, :generate_validators, :generate_index_specifications
+  attr_accessor :klass,
+                :file,
+                :generate_fields,
+                :generate_enumerized_attributes,
+                :generate_associations,
+                :generate_validators,
+                :generate_index_specifications
 
   def initialize(klass, file, generate_fields = true, generate_enumerized_attributes = true, generate_associations = true,
                  generate_validators = true, generate_index_specifications = true)
@@ -18,58 +28,80 @@ class TestFileGenerator
     self.generate_index_specifications = generate_index_specifications
   end
 
-
   def init_test_creation
     modules = klass.included_modules
-    # highest_namespaces = modules.map{|module| module.to_s.split( '::' )[0].constantize}.uniq
 
-    ContextBlockGenerator.new(file, "MONGOID").generate do
-      ContextBlockGenerator.new(file, "fields").generate do
-        SpecsGenerator.new(klass, [[:fields]], [], file, MongoidSpecs::DocumentSpec).generate  if modules.include? Mongoid::Document
-        SpecsGenerator.new(klass, [[:enumerized_attributes, []], [:attributes, []]], [], file, EnumerizeSpecs::BaseSpec).generate  if modules.include? Enumerize::Base
-      end
-      ContextBlockGenerator.new(file, "associations").generate do
-        SpecsGenerator.new(klass, [[:reflect_on_all_associations, [:belongs_to, :has_many, :has_and_belongs_to_many]]], file, MongoidSpecs::AssociationSpec).generate
-      end
-      ContextBlockGenerator.new(file, "validations").generate do
-        SpecsGenerator.new(klass, [[:validators]], file, MongoidSpecs::ValidationSpec).generate
-      end
-      ContextBlockGenerator.new(file, "indices").generate do
-        SpecsGenerator.new(klass, [[:index_specifications]], file, MongoidSpecs::IndexSpec).generate
+    # exclude unknown modules"#<Module:0x00007fe896c2be98>",
+    highest_namespaces = (modules.map do|mod|
+                              mod.to_s.split( '::' )[0].constantize unless mod.to_s.starts_with?("#")
+                          end).uniq.compact
+    # Mongoid
+    if highest_namespaces.include? Mongoid
+      ContextBlockGenerator.new(file, "MONGOID", 0).generate do
+        if modules.include? Mongoid::Document
+          #FIELDS
+          ContextBlockGenerator.new(file, "fields", 2).generate do
+            SpecsGenerator.new(klass, file, klass.fields, MongoidSpecs::DocumentSpec, 4).generate  if klass.fields.present?
+            # ENUMERIZE
+
+            SpecsGenerator.new(klass, file, klass.enumerized_attributes.attributes, EnumerizeSpecs::BaseSpec, 4).generate  if (modules.include?(Enumerize::Base) && klass.enumerized_attributes.present?)
+
+          end
+        end
+        # #ASSOCIATIONS
+        # if klass.reflect_on_all_associations(:belongs_to, :has_many, :has_and_belongs_to_many).present?
+        #   ContextBlockGenerator.new(file, "associations").generate do
+        #     SpecsGenerator.new(klass, file, klass.reflect_on_all_associations(:belongs_to, :has_many, :has_and_belongs_to_many), MongoidSpecs::AssociationSpec).generate
+        #   end
+        # end
+        # # VALIDATORS
+        # if klass.validators.present?
+        #   ContextBlockGenerator.new(file, "validations").generate do
+        #     SpecsGenerator.new(klass, file, klass.validators, MongoidSpecs::ValidationSpec).generate
+        #   end
+        # end
+        # #INDICES
+        # if klass.index_specifications.present?
+        #   ContextBlockGenerator.new(file, "indices").generate do
+        #     SpecsGenerator.new(klass, file, klass.index_specifications, MongoidSpecs::IndexSpec).generate
+        #   end
+        # end
+        # instance_methods = klass.instance_methods(false).select {|m| klass.instance_method(m).source_location.first.ends_with? "/#{klass.to_s.downcase}.rb"}
+        # if instance_methods.present?
+        #   ContextBlockGenerator.new(file, "instance methods").generate do
+        #     SpecsGenerator.new(klass, file, instance_methods, ::InstanceMethodSpec).generate
+        #   end
+        # end
+        # if klass.attachment_definitions.present?
+        #   ContextBlockGenerator.new(file, "paperclip_files").generate do
+        #     ImageSpecBlockGenerator.new(klass, file, klass.attachment_definitions.keys).generate
+        #   end
+        # end
+        # if modules.include? Edulib::Datatable
+        #   ContextBlockGenerator.new(file, "Datatable").generate do
+        #     if klass.datatable_exclude_fields.present?
+        #       DescribeBlockGenerator.new(file, 'datatable_exclude_fields').generate do
+        #         SpecsGenerator.new(klass, file, nil, ::DatatableSpecs::ExcludeFieldsSpec).generate
+        #       end
+        #     end
+        #     if klass.datatable_fields.present?
+        #       DescribeBlockGenerator.new(file, 'datatable_fields').generate do
+        #         SpecsGenerator.new(klass, file, nil, ::DatatableSpecs::FieldsSpec).generate
+        #       end
+        #     end
+        #     if klass.datatable_search_fields.present?
+        #       DescribeBlockGenerator.new(file, 'datatable_search_fields').generate do
+        #         SpecsGenerator.new(klass, file,nil,  ::DatatableSpecs::SearchFieldsSpec).generate
+        #       end
+        #     end
+        #     DescribeBlockGenerator.new(file, 'datatable_config').generate do
+        #       SpecsGenerator.new(klass, file, nil, ::DatatableSpecs::ConfigSpec).generate
+        #     end
+        #   end
+        # end
       end
     end
-
-
-
-
-
   end
-  #
-  # def init_test_creation
-  #   file.write("RSpec.describe #{klass}, type: :model do \n")
-  #   data = [
-  #     { klass_method: :fields, klass_method_args: nil, allow_generation: generate_fields,
-  #       context_name: 'fields', write_spec_proc: field_proc },
-  #     { klass_method: :enumerized_attributes, klass_method_args: nil,
-  #       allow_generation: generate_enumerized_attributes, context_name: 'enumerize',
-  #       write_spec_proc: enumerize_proc },
-  #     { klass_method: :validators, klass_method_args: nil,
-  #       allow_generation: generate_validators, context_name: 'validations',
-  #       write_spec_proc: validation_proc },
-  #     { klass_method: :index_specifications, klass_method_args: nil,
-  #       allow_generation: generate_index_specifications, context_name: 'index',
-  #       write_spec_proc: index_proc },
-  #     { klass_method: :reflect_on_all_associations, klass_method_args: %i[belongs_to has_many has_and_belongs_to_many],
-  #       allow_generation: generate_associations, context_name: 'associations', write_spec_proc: association_proc }
-  #
-  #   ]
-  #
-  #   data.each do |argv|
-  #     generate_specs(argv)
-  #   end
-  #
-  #   file.write("end \n")
-  # end
 
   private
 
